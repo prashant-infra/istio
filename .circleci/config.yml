@@ -1,32 +1,18 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-
-orbs: 
-  helm-deploy: hazmo/helm-deploy@0.0.4
-  
-executors:
-  my-custom-executor:
-    docker:
-      - image: cimg/base:stable
-        auth:
-          # ensure you have first added these secrets
-          # visit app.circleci.com/settings/project/github/prashant-infra/istio/environment-variables
-          username: $DOCKER_HUB_USER
-          password: $DOCKER_HUB_PASSWORD
+orbs:
+  helm-deploy: hazmo/helm-deploy@0.0.2
 jobs:
-  my-job-name:
-
-    executor: my-custom-executor
+  deploy:
+    executor: helm-deploy/default
     steps:
-      - checkout
-      - run: |
-          # echo Hello, World!
-
-workflows:
-  my-custom-workflow:
-    jobs:
-      - my-job-name
+      - run:
+          command: |
+            echo 'export HELM_REPO_URL=https://charts.example.com' >> $BASH_ENV
+      - helm-deploy/add-helm-repo:
+          helm_repo_name: my_repo
+      - helm-deploy/configure-kubectl
+      - helm-deploy/deploy:
+          helm_release: hello-world
+          helm_chart: my_repo/hello-world
+          helm_values: image.tag=v1.1
+          helm_extra_args: '--reuse-values'
