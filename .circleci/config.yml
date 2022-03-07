@@ -1,18 +1,15 @@
 version: 2.1
 orbs:
-  helm-deploy: hazmo/helm-deploy@0.0.2
+  azure-cli: circleci/azure-cli@1.0.0
 jobs:
-  deploy:
-    executor: helm-deploy/default
+  login-to-azure:
+    executor: azure-cli/azure-docker
     steps:
+      - azure-cli/login-with-service-principal
       - run:
-          command: |
-            echo 'export HELM_REPO_URL=https://charts.example.com' >> $BASH_ENV
-      - helm-deploy/add-helm-repo:
-          helm_repo_name: my_repo
-      - helm-deploy/configure-kubectl
-      - helm-deploy/deploy:
-          helm_release: hello-world
-          helm_chart: my_repo/hello-world
-          helm_values: image.tag=v1.1
-          helm_extra_args: '--reuse-values'
+          command: az resource list
+          name: List resources of tenant stored as `AZURE_SP_TENANT` env var
+workflows:
+  example-workflow:
+    jobs:
+      - login-to-azure
